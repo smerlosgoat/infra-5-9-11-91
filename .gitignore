@@ -38,7 +38,6 @@ terraform.rc
 *.retry
 .ansible
 
-secrets/**
 ansible/roles/**/
 ansible/collections/**/
 fury/.furyctl/
