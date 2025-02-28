@@ -1,0 +1,120 @@
+infra01:
+  cpu_cores: 2
+  memory: 16384
+  disk_size: 32
+  network_ip: "192.168.200.200/24"
+  dhcp: true
+  tags:
+    - "infra"
+infra02:
+  cpu_cores: 2
+  memory: 16384
+  disk_size: 32
+  network_ip: "192.168.200.201/24"
+  dhcp: true
+  tags:
+    - "infra"
+infra03:
+  cpu_cores: 2
+  memory: 16384
+  disk_size: 32
+  network_ip: "192.168.200.202/24"
+  dhcp: true
+  tags:
+    - "infra"
+haproxy01:
+  cpu_cores: 2
+  memory: 2048
+  disk_size: 32
+  network_ip: "192.168.200.210/24"
+  dhcp: true
+  tags:
+    - "haproxy"
+haproxy02:
+  cpu_cores: 2
+  memory: 2048
+  disk_size: 32
+  network_ip: "192.168.200.211/24"
+  dhcp: true
+  tags:
+    - "haproxy"
+master01:
+  cpu_cores: 2
+  memory: 8192
+  disk_size: 32
+  network_ip: "192.168.200.220/24"
+  dhcp: true
+  tags:
+    - "master"
+master02:
+  cpu_cores: 2
+  memory: 8192
+  disk_size: 32
+  network_ip: "192.168.200.221/24"
+  dhcp: true
+  tags:
+    - "master"
+master03:
+  cpu_cores: 2
+  memory: 8192
+  disk_size: 32
+  network_ip: "192.168.200.222/24"
+  dhcp: true
+  tags:
+    - "master"
+app01:
+  cpu_cores: 2
+  memory: 16384
+  disk_size: 32
+  network_ip: "192.168.200.230/24"
+  dhcp: true
+  tags:
+    - "app"
+app02:
+  cpu_cores: 2
+  memory: 16384
+  disk_size: 32
+  network_ip: "192.168.200.231/24"
+  dhcp: true
+  tags:
+    - "app"
+app03:
+  cpu_cores: 2
+  memory: 16384
+  disk_size: 32
+  network_ip: "192.168.200.232/24"
+  dhcp: true
+  tags:
+    - "app"
+app04:
+  cpu_cores: 2
+  memory: 16384
+  disk_size: 32
+  network_ip: "192.168.200.233/24"
+  dhcp: true
+  tags:
+    - "app"
+app05:
+  cpu_cores: 2
+  memory: 16384
+  disk_size: 32
+  network_ip: "192.168.200.234/24"
+  dhcp: true
+  tags:
+    - "app"
+app06:
+  cpu_cores: 2
+  memory: 16384
+  disk_size: 32
+  network_ip: "192.168.200.235/24"
+  dhcp: true
+  tags:
+    - "app"
+# bastion:
+#   cpu_cores: 2
+#   memory: 2048
+#   disk_size: 32
+#   network_ip: "192.168.200.20/24"
+#   dhcp: false
+#   tags:
+#     - "bastion"

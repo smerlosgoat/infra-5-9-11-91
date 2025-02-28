@@ -1,0 +1,176 @@
+---
+apiVersion: kfd.sighup.io/v1alpha2
+kind: OnPremises
+metadata:
+  name: goatfinance-dev
+spec:
+  distributionVersion: v1.31.0
+  kubernetes:
+    pkiFolder: ./pki
+    ssh:
+      username: smerlos
+      keyPath: /home/smerlos/.ssh/id_rsa
+    dnsZone: compute.internal
+    controlPlaneAddress: controlplane.compute.internal:6443
+    podCidr: 10.128.0.0/16
+    svcCidr: 172.30.0.0/16
+    loadBalancers:
+      enabled: true
+      hosts:
+        - "ip": "192.168.200.210"
+          "name": "haproxy01-192-168-200-210"
+        - "ip": "192.168.200.211"
+          "name": "haproxy02-192-168-200-211"
+
+      keepalived:
+        enabled: true
+        interface: eth0
+        ip: 192.168.200.250/32
+        virtualRouterId: "206"
+        passphrase: b16cf055
+      stats:
+        username: admin
+        password: Geiz0yaegh9eeGhapeequ5a
+      # additionalConfig: "{file://./configs/haproxy-additional.cfg}"
+    masters:
+      hosts:
+        - "ip": "192.168.200.220"
+          "name": "master01-192-168-200-220"
+        - "ip": "192.168.200.221"
+          "name": "master02-192-168-200-221"
+        - "ip": "192.168.200.222"
+          "name": "master03-192-168-200-222"
+    nodes:
+      - name: app
+        hosts:
+          - "ip": "192.168.200.230"
+            "name": "app01-192-168-200-230"
+          - "ip": "192.168.200.231"
+            "name": "app02-192-168-200-231"
+          - "ip": "192.168.200.232"
+            "name": "app03-192-168-200-232"
+          - "ip": "192.168.200.233"
+            "name": "app04-192-168-200-233"
+          - "ip": "192.168.200.234"
+            "name": "app05-192-168-200-234"
+          - "ip": "192.168.200.235"
+            "name": "app06-192-168-200-235"
+
+        taints: []
+      - name: infra
+        hosts:
+        - "ip": "192.168.200.200"
+          "name": "infra01-192-168-200-200"
+        - "ip": "192.168.200.201"
+          "name": "infra02-192-168-200-201"
+        - "ip": "192.168.200.202"
+          "name": "infra03-192-168-200-202"
+        taints:
+          - key: node.kubernetes.io/role
+            value: infra
+            effect: NoSchedule
+    advanced:
+      # encryption:
+      #   configuration: "{file://./secrets/etcd-encryption-config.yaml}"
+      oidc:
+        issuer_url: https://login.goatfinance.io
+        client_id: oidc-auth-client
+      cloud:
+        provider: external
+  distribution:
+    # This common configuration will be applied to all the packages that will be installed in the cluster
+    common:
+      # The node selector to use to place the pods for all the KFD packages
+      nodeSelector:
+        node.kubernetes.io/role: infra
+      # The tolerations that will be added to the pods for all the KFD packages
+      tolerations:
+        - effect: NoSchedule
+          key: node.kubernetes.io/role
+          value: infra
+    # This section contains all the configurations for all the KFD core modules
+    modules:
+      networking:
+        # this type defines if we need to install the networking in the cluster, type available: cilium, calico
+        type: "calico"
+      # This section contains all the configurations for the ingress module
+      ingress:
+        # The base domain used for all the KFD infrastructural ingresses. If using the nginx dual type, this value should be the same as the `.spec.distribution.modules.ingress.dns.private.name`
+        baseDomain: internal.example.dev
+        # configurations for the nginx ingress controller package
+        nginx:
+          # type defines if the nginx should be configured as single or dual (internal + external) or none, with none no ingress controller will be deployed and also no ingress resource will be created
+          type: dual
+          # the tls section defines how the tls for the ingresses should be managed
+          tls:
+            # provider can be certManager, secret
+            provider: certManager
+            # if provider is set as secret, this key will be used to create the certificate in the cluster
+            # secret:
+              # the certificate file content or you can use the file notation to get the content from a file
+              # cert: "{file://relative/path/to/ssl.crt}"
+              # the key file, a file notation can be used to get the content from a file
+              # key: "{file://relative/path/to/ssl.key}"
+              # the ca file, a file notation can be used to get the content from a file
+              # ca: "{file://relative/path/to/ssl.ca}"
+        # configuration for the cert-manager package Required even if `ingress.nginx.type` is `none`, cert-manager is used for managing other certificates in the cluster besides the TLS termination certificates for the ingresses."
+        certManager:
+          # the configuration for the clusterIssuer that will be created
+          clusterIssuer:
+            # the name of the clusterIssuer
+            name: letsencrypt-fury
+            # the email used during issuing procedures
+            email: example@sighup.io
+            # you can configure the clusterIssuer by specifing type (can be only http01) or custom solvers
+            type: http01
+      # This section contains all the configurations for the logging module
+      logging:
+        # can be opensearch, loki, customOutput or none. With none, the logging module won't be installed
+        type: loki
+        # configurations for the loki package
+        loki:
+          tsdbStartDate: "2024-11-20"
+        # configurations for the minio-ha package
+        minio:
+          # the PVC size for each minio disk, 6 disks total
+          storageSize: "20Gi"
+        # configurations for the loki package
+      # This section contains all the configurations for the monitoring module
+      monitoring:
+        # can be prometheus, prometheusAgent, mimir or none. With none, nothing from the monitoring module will be installed
+        type: "prometheus"
+      # This section contains all the configurations for the tracing module
+      tracing:
+        # can be tempo or none, with none, nothing from the tracing module will be installed
+        type: none
+        # configurations for the minio-ha package
+        minio:
+          # the PVC size for each minio disk, 6 disks total
+          storageSize: "20Gi"
+      # This section contains all the configurations for the policy (opa) module
+      policy:
+        # type can be gatekeeper, kyverno or none
+        type: gatekeeper
+        # configurations for the gatekeeper package
+        gatekeeper:
+          # This parameter adds namespaces to Gatekeeper's exemption list, so it will not enforce the constraints on them.
+          additionalExcludedNamespaces: []
+          installDefaultPolicies: true
+          enforcementAction: deny
+      # This section contains all the configurations for the Disaster Recovery module
+      dr:
+        # type can be none or on-premises
+        type: on-premises
+        # Configurations for the velero package
+        velero: {}
+      # This section contains all the configurations for the auth module
+      auth:
+        provider:
+          # The authentication type used for the infrastructure ingresses (all the ingress for the distribution) can be none, basicAuth, sso
+          type: none
+        # The base domain used for all the auth ingresses, if in the nginx dual configuration, it should be the same as the .spec.distribution.modules.ingress.dns.public.name domain
+        baseDomain: example.dev
+    # Custom Patches to add or override fields in the generated manifests
+    #customPatches: {}
+  # Plugins to be installed
+  #plugins: {}

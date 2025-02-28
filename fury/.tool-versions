@@ -1,0 +1,11 @@
+direnv 2.34.0
+terraform 1.6.5
+kustomize 5.4.2
+helmfile 0.165.0
+kubectl 1.30.2
+helm 3.15.2
+dyff 1.8.0
+furyctl 0.31.1
+jq 1.7.1
+stern 1.30.0
+yq 4.44.2

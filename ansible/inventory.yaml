@@ -1,0 +1,4 @@
+"all":
+  "hosts":
+    "bastion":
+      "ansible_host": "192.168.200.20"

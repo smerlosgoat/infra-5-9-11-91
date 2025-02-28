@@ -1,0 +1,70 @@
+---
+- name: Converge
+  hosts: all
+  become: true  # `false` will also work.
+  gather_facts: false
+  roles:
+    - role: robertdebock.bootstrap
+    - role: PeterMosmans.bootstrap
+  tasks:
+
+    - name: Update package list
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+    - name: Perform a full upgrade
+      ansible.builtin.apt:
+        upgrade: dist
+        state: present
+    - name: Remove duplicate IP entries with different hostnames (IPv4)
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: "^{{ ansible_host }}\\s+.*$"
+        state: absent
+    - name: Remove duplicate IP entries with different hostnames (IPv6)
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: "^{{ ansible_default_ipv6.address }}\\s+.*$"
+        state: absent
+      when: ansible_default_ipv6.address is defined
+
+    - name: Add correct hostname entry (IPv4)
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ ansible_host }} {{ inventory_hostname }}"
+        state: present
+
+    - name: Ensure the localhost line has the correct hostname
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: '^127\\.0\\.0\\.1\\s+localhost\\.localdomain\\s+localhost'
+        line: "127.0.0.1 localhost.localdomain localhost {{ inventory_hostname }}"
+        state: present
+  vars:
+    bootstrap_users:
+      - name: smerlos
+        comment: "smerlos"
+        groups:
+          - sudo
+        shell: "/bin/bash"
+        ssh_key: https://github.com/smerlos.keys
+        repos: []
+        installers: []
+    bootstrap_packages:
+      - ansible
+      - curl
+      - software-properties-common
+      - vim
+      - curl
+      - wget
+      - git
+      - screen
+      - vim
+      - build-essential
+      - python3-pip
+      - sudo
+      - ufw
+    bootstrap_reboot_allowed: true
+    bootstrap_packages_remove: []
+    bootstrap_packages_upgrade: true
+    bootstrap_packages_update_cache: true

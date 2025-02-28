@@ -1,0 +1,60 @@
+---
+- name: Manage host resolution in /etc/hosts - Iteration 5 (Final)
+  hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    # Optional domain to append to the host name for FQDN.
+    # e.g. domain_name: "mydomain.local"
+    domain_name: "compute.internal"
+
+    # Optional extra hosts to add, a list of dicts:
+    # e.g. extra_hosts:
+    #   - { ip: "10.10.10.5", name: "extra1" }
+    #   - { ip: "10.10.10.6", name: "extra2" }
+    extra_hosts: []
+
+  tasks:
+    - name: "STEP 1: Build host record lines from inventory"
+      # We skip localhost and any host that doesn't have a valid ansible_host.
+      ansible.builtin.set_fact:
+        host_entries: "{{ host_entries | default([]) + [host_entry] }}"
+      loop: "{{ groups['all'] }}"
+      when:
+        - item != 'localhost'
+        - hostvars[item].ansible_host is defined
+      vars:
+        final_hostname: "{{ item }}{{ '.' + domain_name if domain_name | length > 0 else '' }}"
+        host_entry: "{{ hostvars[item].ansible_host }} {{ item }} {{ final_hostname }}"
+      tags: build_hosts
+
+    - name: "STEP 2: Append extra host entries"
+      # Add each custom host from extra_hosts. If domain_name is provided,
+      # we build FQDN. If not, just use the provided name.
+      ansible.builtin.set_fact:
+        host_entries: "{{ host_entries + [ item.ip ~ ' ' ~ (item.name ~ '.' ~ domain_name if domain_name|length > 0 else item.name) ] }}"
+      loop: "{{ extra_hosts }}"
+      when: item.ip is defined and item.name is defined
+      tags: extra_hosts
+
+    - name: "STEP 3: Update /etc/hosts with all host entries"
+      # Use regexp to avoid duplicates for the same IP + hostname line.
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        create: true
+        regexp: "^{{ item.split(' ')[0] }}\\s+{{ item.split(' ')[1] }}$"
+        line: "{{ item }}"
+        state: present
+        mode: '0644'
+      loop: "{{ host_entries }}"
+      tags: update_hosts
+
+    - name: "STEP 4: Check connectivity to all remote hosts"
+      # The 'ping' module will fail the play if a host is unreachable.
+      ansible.builtin.ping:
+      loop: "{{ groups['all'] }}"
+      loop_control:
+        loop_var: inventory_item
+      when: inventory_item != 'localhost'
+      tags: connectivity

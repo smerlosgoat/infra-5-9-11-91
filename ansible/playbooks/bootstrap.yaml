@@ -1,0 +1,137 @@
+---
+# Playbook to bootstrap a system with package updates, user and host configuration,
+# DNS settings for systemd-resolved, and a final firewall disable step.
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+
+  pre_tasks:
+    # Update the package cache and perform a full system upgrade before applying roles.
+    - name: Update package list
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Perform a full upgrade
+      ansible.builtin.apt:
+        upgrade: dist
+        state: present
+
+  roles:
+    - role: PeterMosmans.bootstrap
+    - role: robertdebock.fail2ban
+    - role: hifis.toolkit.unattended_upgrades
+
+  vars:
+    # Unattended upgrade settings
+    unattended_origins_patterns:
+      - 'origin=Ubuntu,archive=${distro_codename}-security'
+      - 'o=Ubuntu,a=${distro_codename}-updates'
+    bootstrap_packages_remove: []
+    grub_settings: []
+    bootstrap_users:
+      - name: smerlos
+        comment: "God! xD"
+        groups:
+          - sudo
+        shell: /bin/bash
+        ssh_key: https://github.com/smerlos.keys
+        repos: []
+        installers: []
+    bootstrap_packages:
+      - software-properties-common
+      - ansible
+      - build-essential
+      - vim
+      - screen
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - wget
+      - git
+      - ufw
+    bootstrap_reboot_allowed: true
+    sshd_passwordauthentication: "no"
+    sshd_permitemptypasswords: "no"
+    sshd_permitrootlogin: "no"
+    sshd_pubkeyauthentication: "yes"
+    timezone: Europe/Madrid
+  tasks:
+    ########################################
+    # Hosts File Configuration
+    ########################################
+    - name: Remove duplicate IPv4 entries in /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: "^{{ ansible_host }}\\s+.*$"
+        state: absent
+
+    - name: Remove duplicate IPv6 entries in /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: "^{{ ansible_default_ipv6.address }}\\s+.*$"
+        state: absent
+      when: ansible_default_ipv6.address is defined
+
+    - name: Add correct hostname entry (IPv4) in /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ ansible_host }} {{ inventory_hostname }}"
+        state: present
+
+    - name: Ensure localhost line has the correct hostname in /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: '^127\\.0\\.0\\.1\\s+localhost\\.localdomain\\s+localhost'
+        line: "127.0.0.1 localhost.localdomain localhost {{ inventory_hostname }}"
+        state: present
+
+    # ########################################
+    # # DNS Configuration (systemd-resolved)
+    # ########################################
+    # - name: Ensure DNSStubListener is set to yes in resolved.conf
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/systemd/resolved.conf
+    #     regexp: '^DNSStubListener='
+    #     line: 'DNSStubListener=yes'
+    #     state: present
+
+    # - name: Set Domains to compute.internal in resolved.conf
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/systemd/resolved.conf
+    #     regexp: '^Domains='
+    #     line: 'Domains=compute.internal'
+    #     state: present
+
+    # - name: Set DNSSEC to no in resolved.conf
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/systemd/resolved.conf
+    #     regexp: '^DNSSEC='
+    #     line: 'DNSSEC=no'
+    #     state: present
+
+    # - name: Ensure search domain is set in /etc/resolv.conf
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/resolv.conf
+    #     regexp: '^search'
+    #     line: 'search compute.internal'
+    #     state: present
+
+  post_tasks:
+    ########################################
+    # Final Firewall Disable Step
+    ########################################
+    - name: Disable UFW firewall if active
+      ansible.builtin.command: ufw disable
+      register: ufw_disable
+      changed_when: "'Firewall stopped' in ufw_disable.stdout or ufw_disable.rc == 0"
+      ignore_errors: yes
+    - name: Reboot host and wait for it to restart
+      ansible.builtin.reboot:
+        msg: Reboot initiated by Ansible
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: whoami
