@@ -2,6 +2,7 @@
 
 init:
 	terraform init
+	tflint --init
 
 validate: lint format
 	terraform validate

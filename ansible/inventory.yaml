@@ -1,4 +1,30 @@
 "all":
   "hosts":
-    "bastion":
-      "ansible_host": "192.168.200.20"
+    "app01":
+      "ansible_host": "192.168.200.128"
+    "app02":
+      "ansible_host": "192.168.200.129"
+    "app03":
+      "ansible_host": "192.168.200.125"
+    "app04":
+      "ansible_host": "192.168.200.118"
+    "app05":
+      "ansible_host": "192.168.200.117"
+    "app06":
+      "ansible_host": "192.168.200.120"
+    "haproxy01":
+      "ansible_host": "192.168.200.127"
+    "haproxy02":
+      "ansible_host": "192.168.200.126"
+    "infra01":
+      "ansible_host": "192.168.200.119"
+    "infra02":
+      "ansible_host": "192.168.200.124"
+    "infra03":
+      "ansible_host": "192.168.200.121"
+    "master01":
+      "ansible_host": "192.168.200.123"
+    "master02":
+      "ansible_host": "192.168.200.116"
+    "master03":
+      "ansible_host": "192.168.200.122"

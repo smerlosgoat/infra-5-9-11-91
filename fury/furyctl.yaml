@@ -6,7 +6,7 @@ metadata:
 spec:
   distributionVersion: v1.31.0
   kubernetes:
-    pkiFolder: ./pki
+    pkiFolder: ./secrets/pki
     ssh:
       username: smerlos
       keyPath: /home/smerlos/.ssh/id_rsa
@@ -17,11 +17,10 @@ spec:
     loadBalancers:
       enabled: true
       hosts:
-        - "ip": "192.168.200.210"
-          "name": "haproxy01-192-168-200-210"
-        - "ip": "192.168.200.211"
-          "name": "haproxy02-192-168-200-211"
-
+        - "ip": "192.168.200.127"
+          "name": "haproxy01"
+        - "ip": "192.168.200.126"
+          "name": "haproxy02"
       keepalived:
         enabled: true
         interface: eth0
@@ -34,37 +33,37 @@ spec:
       # additionalConfig: "{file://./configs/haproxy-additional.cfg}"
     masters:
       hosts:
-        - "ip": "192.168.200.220"
-          "name": "master01-192-168-200-220"
-        - "ip": "192.168.200.221"
-          "name": "master02-192-168-200-221"
-        - "ip": "192.168.200.222"
-          "name": "master03-192-168-200-222"
+        - "ip": "192.168.200.123"
+          "name": "master01"
+        - "ip": "192.168.200.116"
+          "name": "master02"
+        - "ip": "192.168.200.122"
+          "name": "master03"
     nodes:
       - name: app
         hosts:
-          - "ip": "192.168.200.230"
-            "name": "app01-192-168-200-230"
-          - "ip": "192.168.200.231"
-            "name": "app02-192-168-200-231"
-          - "ip": "192.168.200.232"
-            "name": "app03-192-168-200-232"
-          - "ip": "192.168.200.233"
-            "name": "app04-192-168-200-233"
-          - "ip": "192.168.200.234"
-            "name": "app05-192-168-200-234"
-          - "ip": "192.168.200.235"
-            "name": "app06-192-168-200-235"
+          - "ip": "192.168.200.128"
+            "name": "app01"
+          - "ip": "192.168.200.129"
+            "name": "app02"
+          - "ip": "192.168.200.125"
+            "name": "app03"
+          - "ip": "192.168.200.118"
+            "name": "app04"
+          - "ip": "192.168.200.117"
+            "name": "app05"
+          - "ip": "192.168.200.120"
+            "name": "app06"
 
         taints: []
       - name: infra
         hosts:
-        - "ip": "192.168.200.200"
-          "name": "infra01-192-168-200-200"
-        - "ip": "192.168.200.201"
-          "name": "infra02-192-168-200-201"
-        - "ip": "192.168.200.202"
-          "name": "infra03-192-168-200-202"
+          - "ip": "192.168.200.119"
+            "name": "infra01"
+          - "ip": "192.168.200.124"
+            "name": "infra02"
+          - "ip": "192.168.200.121"
+            "name": "infra03"
         taints:
           - key: node.kubernetes.io/role
             value: infra

@@ -43,3 +43,4 @@ ansible/collections/**/
 fury/.furyctl/
 
 .vscode
+terraform/plan.out
